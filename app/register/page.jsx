@@ -14,10 +14,57 @@ const RegisterPage = () => {
    const router = useRouter()
 
    // Form Submit
-   const handleSubmit = async (e) => {}
+   const handleSubmit = async (e) => {
+      e.preventDefault()
+
+      if (!isLoaded) {
+         return
+      }
+
+      try {
+         await signUp.create({
+            first_name: firstName,
+            last_name: lastName,
+            email_address: email,
+            password,
+         })
+
+         // send the email.
+         await signUp.prepareEmailAddressVerification({
+            strategy: 'email_code',
+         })
+
+         // change the UI to our pending section.
+         setPendingVerification(true)
+      } catch (error) {
+         console.log(error)
+      }
+   }
 
    // Verify User Email Code
-   const onPressVerify = async (e) => {}
+   const onPressVerify = async (e) => {
+      e.preventDefault()
+      if (!isLoaded) {
+         return
+      }
+
+      try {
+         const completeSignUp = await signUp.attemptEmailAddressVerification({
+            code,
+         })
+         if (completeSignUp.status !== 'complete') {
+            /*  investigate the response, to see if there was an error
+         or if the user needs to complete more steps.*/
+            console.log(JSON.stringify(completeSignUp, null, 2))
+         }
+         if (completeSignUp.status === 'complete') {
+            await setActive({ session: completeSignUp.createdSessionId })
+            router.push('/')
+         }
+      } catch (err) {
+         console.error(JSON.stringify(err, null, 2))
+      }
+   }
 
    return (
       <div className='border p-5 rounded' style={{ width: '500px' }}>
